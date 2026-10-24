@@ -21,6 +21,7 @@ model Profile {
   created_at     DateTime @default(now())
   updated_at     DateTime @updatedAt
 
+  // Existing campus service relationships
   arrivals       ArrivalRequest[]
   lost_reports   LostReport[]
   hostel_reports HostelReport[]
@@ -28,6 +29,9 @@ model Profile {
   // Messaging relationships
   sent_messages     Message[] @relation("MessageSender")
   received_messages Message[] @relation("MessageRecipient")
+
+  // Notifications
+  notifications Notification[]
 
   @@map("profiles")
 }
@@ -160,6 +164,7 @@ model Message {
   is_read Boolean   @default(false)
   read_at DateTime?
 
+  // Email delivery tracking
   email_status  String    @default("NOT_SENT")
   email_sent_at DateTime?
 
@@ -169,7 +174,43 @@ model Message {
   sender    Profile @relation("MessageSender", fields: [sender_id], references: [id], onDelete: Cascade)
   recipient Profile @relation("MessageRecipient", fields: [recipient_id], references: [id], onDelete: Cascade)
 
+  // Message attachments
+  attachments MessageAttachment[]
+
   @@index([recipient_id, is_read, created_at])
   @@index([sender_id, created_at])
   @@map("messages")
+}
+
+model Notification {
+  id         String    @id @default(uuid()) @db.Uuid
+  user_id    String    @db.Uuid
+  title      String    @db.VarChar(200)
+  message    String    @db.Text
+  type       String    @default("MESSAGE")
+  link       String?   @db.Text
+  is_read    Boolean   @default(false)
+  read_at    DateTime?
+  created_at DateTime  @default(now())
+
+  user Profile @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id, is_read, created_at])
+  @@map("notifications")
+}
+
+model MessageAttachment {
+  id          String   @id @default(uuid()) @db.Uuid
+  message_id  String   @db.Uuid
+  file_name   String   @db.VarChar(255)
+  file_url    String   @db.Text
+  mime_type   String   @db.VarChar(150)
+  file_size   Int
+  storage_key String?  @db.Text
+  created_at  DateTime @default(now())
+
+  message Message @relation(fields: [message_id], references: [id], onDelete: Cascade)
+
+  @@index([message_id])
+  @@map("message_attachments")
 }
