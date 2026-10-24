@@ -1,0 +1,127 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+model Profile {
+  id             String   @id @default(uuid()) @db.Uuid
+  full_name      String
+  email          String   @unique
+  password_hash  String
+  matric_no      String?  @unique
+  hall           String?
+  avatar_url     String?  @db.Text
+  role           String   @default("student")
+  council_role   String?
+  council_active Boolean  @default(true)
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+  arrivals       ArrivalRequest[]
+  lost_reports   LostReport[]
+  hostel_reports HostelReport[]
+  @@map("profiles")
+}
+model ArrivalRequest {
+  id               String   @id @default(uuid()) @db.Uuid
+  student_id       String   @db.Uuid
+  item_description String
+  quantity         Int      @default(1)
+  notes            String?  @db.Text
+  expected_date    DateTime
+  arrival_time     String   @default("09:00")
+  delivery_method  String   @default("self")
+  transport_charge Int      @default(0)
+  emergency        Boolean  @default(false)
+  status           String   @default("SUBMITTED")
+  assigned_officer String?
+  delivery_pin     String?
+  contraband       Json     @default("[]")
+  inspection_notes String?  @db.Text
+  delivered_at     DateTime?
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+  student          Profile  @relation(fields: [student_id], references: [id], onDelete: Cascade)
+  @@index([student_id, created_at])
+  @@index([status, expected_date])
+  @@map("arrival_requests")
+}
+model GateSchedule {
+  id           String   @id @default(uuid()) @db.Uuid
+  title        String   @default("Official Gate Date")
+  gate_date    DateTime
+  days         Json     @default("[]")
+  hours        String   @default("08:00 - 17:30")
+  opening_time String   @default("08:00")
+  closing_time String   @default("17:30")
+  notes        String?  @db.Text
+  published_by String?  @db.Uuid
+  active       Boolean  @default(true)
+  published_at DateTime @default(now())
+  updated_at   DateTime @updatedAt
+  @@index([active, gate_date])
+  @@map("gate_schedules")
+}
+model LostReport {
+  id                 String   @id @default(uuid()) @db.Uuid
+  student_id         String   @db.Uuid
+  item_name          String
+  location           String
+  description        String   @db.Text
+  proof_url          String?  @db.Text
+  proof_description  String?  @db.Text
+  status             String   @default("open")
+  matched_found_id   String?  @db.Uuid
+  council_notes      String?  @db.Text
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+  student            Profile  @relation(fields: [student_id], references: [id], onDelete: Cascade)
+  @@index([student_id, created_at])
+  @@map("lost_reports")
+}
+model FoundItem {
+  id                    String   @id @default(uuid()) @db.Uuid
+  item_name             String
+  location              String
+  description           String   @db.Text
+  image_url             String?  @db.Text
+  reported_by           String?  @db.Uuid
+  reporter_type         String   @default("STUDENT")
+  status                String   @default("available")
+  claimed_by            String?  @db.Uuid
+  claimed_at            DateTime?
+  matched_lost_report_id String? @db.Uuid
+  claim_note            String?  @db.Text
+  created_at            DateTime @default(now())
+  updated_at            DateTime @updatedAt
+  @@index([status, created_at])
+  @@map("found_items")
+}
+model HostelReport {
+  id          String   @id @default(uuid()) @db.Uuid
+  student_id  String   @db.Uuid
+  issue_type  String
+  hall        String?
+  room_area   String?
+  priority    String   @default("Medium")
+  description String   @db.Text
+  status      String   @default("Open")
+  assigned_to String?
+  resolution  String?  @db.Text
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  student     Profile  @relation(fields: [student_id], references: [id], onDelete: Cascade)
+  @@index([status, priority, created_at])
+  @@map("hostel_watch_reports")
+}
+model AuditLog {
+  id          String   @id @default(uuid()) @db.Uuid
+  actor_id    String?  @db.Uuid
+  actor_label String
+  message     String   @db.Text
+  severity    String   @default("info")
+  created_at  DateTime @default(now())
+  @@index([created_at])
+  @@map("audit_logs")
+}
