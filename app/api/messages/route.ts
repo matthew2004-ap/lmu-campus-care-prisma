@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getAuth, addAudit } from '@/lib/auth';
+import { sendCampusCareEmail } from '@/lib/email';
 
 export const dynamic = 'force-dynamic';
 
@@ -305,6 +306,8 @@ export async function POST(request: NextRequest) {
         where: { id: recipientId },
         select: {
           id: true,
+          full_name: true,
+          email: true,
           role: true,
           council_role: true,
           council_active: true,
@@ -392,6 +395,86 @@ export async function POST(request: NextRequest) {
       return message;
     });
 
+    // Send email only after the message and in-app notification are committed.
+    // Email failure must not undo the in-app message.
+    let messageForResponse = result;
+
+    try {
+      const emailResult = await sendCampusCareEmail({
+        to: result.recipient.email,
+        recipientName: result.recipient.full_name,
+        senderName: result.sender.full_name,
+        subject: result.subject,
+        message: result.body,
+      });
+
+      const emailStatus = emailResult.success ? 'SENT' : 'FAILED';
+
+      if (!emailResult.success) {
+        console.error('CampusCare email was not sent:', emailResult.error);
+      }
+
+      try {
+        messageForResponse = await prisma.message.update({
+          where: { id: result.id },
+          data: {
+            email_status: emailStatus,
+            email_sent_at: emailResult.success ? new Date() : null,
+          },
+          include: {
+            sender: {
+              select: {
+                id: true,
+                full_name: true,
+                email: true,
+                role: true,
+                council_role: true,
+              },
+            },
+            recipient: {
+              select: {
+                id: true,
+                full_name: true,
+                email: true,
+                role: true,
+                council_role: true,
+              },
+            },
+            attachments: {
+              select: {
+                id: true,
+                file_name: true,
+                file_url: true,
+                mime_type: true,
+                file_size: true,
+                created_at: true,
+              },
+            },
+          },
+        });
+      } catch (statusError) {
+        // The message is already saved; don't report it as failed because the
+        // separate email-status update encountered a database error.
+        console.error('Unable to update message email status:', statusError);
+      }
+    } catch (emailError) {
+      // Defensive fallback: email problems must not prevent in-app delivery.
+      console.error('CampusCare email integration failed:', emailError);
+      try {
+        messageForResponse = await prisma.message.update({
+          where: { id: result.id },
+          data: { email_status: 'FAILED', email_sent_at: null },
+          include: {
+            sender: { select: { id: true, full_name: true, email: true, role: true, council_role: true } },
+            recipient: { select: { id: true, full_name: true, email: true, role: true, council_role: true } },
+            attachments: { select: { id: true, file_name: true, file_url: true, mime_type: true, file_size: true, created_at: true } },
+          },
+        });
+      } catch (statusError) {
+        console.error('Unable to record email failure:', statusError);
+      }
+    }
+
     // Audit logging should not make a successfully sent message appear to fail.
     try {
       await addAudit(
@@ -405,7 +488,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       {
-        message: serializeMessage(result),
+        message: serializeMessage(messageForResponse),
         notificationCreated: true,
       },
       {
