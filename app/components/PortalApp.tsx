@@ -33,7 +33,37 @@ const navStudent:any[]=[
   ['messages','Messages',MessageSquare],
   ['profile','My Profile',UserRound]
 ];
- const navCouncil=(role==='welfare'?[['dashboard','Overview',LayoutDashboard],['arrival','Arrival Desk',PackageCheck],['gate','Gate Schedule',CalendarDays],['hostel','Hostel Watch',Wrench]]:role==='transport'?[['dashboard','Overview',LayoutDashboard],['arrival','Delivery Queue',Truck]]:role==='pro'?[['dashboard','Overview',LayoutDashboard],['lost','Lost & Found',Search]]:[['dashboard','Overview',LayoutDashboard],['arrival','Arrival Desk',PackageCheck],['gate','Gate Schedule',CalendarDays],['lost','Lost & Found',Search],['hostel','Hostel Watch',Wrench],['audit','Activity Log',Activity]]) as any[];
+ const navCouncil = (
+  role === 'welfare'
+    ? [
+        ['dashboard', 'Overview', LayoutDashboard],
+        ['arrival', 'Arrival Desk', PackageCheck],
+        ['gate', 'Gate Schedule', CalendarDays],
+        ['hostel', 'Hostel Watch', Wrench],
+        ['messages', 'Messages', MessageSquare],
+      ]
+    : role === 'transport'
+    ? [
+        ['dashboard', 'Overview', LayoutDashboard],
+        ['arrival', 'Delivery Queue', Truck],
+        ['messages', 'Messages', MessageSquare],
+      ]
+    : role === 'pro'
+    ? [
+        ['dashboard', 'Overview', LayoutDashboard],
+        ['lost', 'Lost & Found', Search],
+        ['messages', 'Messages', MessageSquare],
+      ]
+    : [
+        ['dashboard', 'Overview', LayoutDashboard],
+        ['arrival', 'Arrival Desk', PackageCheck],
+        ['gate', 'Gate Schedule', CalendarDays],
+        ['lost', 'Lost & Found', Search],
+        ['hostel', 'Hostel Watch', Wrench],
+        ['audit', 'Activity Log', Activity],
+        ['messages', 'Messages', MessageSquare],
+      ]
+) as any[];
  const nav:any[]=council?navCouncil:navStudent;
  const title=nav.find(n=>n[0]===tab)?.[1]||'Overview';
  const arrivals=useMemo(()=>{const a=data?.arrivals||[];return a.filter((x:any)=>`${x.item_description} ${x.student?.full_name||''} ${x.student?.matric_no||''} ${x.status}`.toLowerCase().includes(search.toLowerCase()))},[data,search]);
