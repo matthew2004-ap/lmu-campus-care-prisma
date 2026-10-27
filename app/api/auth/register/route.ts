@@ -25,6 +25,6 @@ export async function POST(req: Request) {
     return response;
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Registration failed.';
-    return NextResponse.json({ error: message.includes('AUTH_SECRET') ? message : 'Could not create the account. Check database setup and try again.' }, { status: 500 });
+    return NextResponse.json({ error: message.includes('AUTH_SECRET') ? message : 'Could not create the account. Check your internet connection.' }, { status: 500 });
   }
 }
