@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import CourseShowcase from './components/CourseShowcase';
 import {
   ArrowUpRight,
   CalendarDays,
@@ -167,6 +168,8 @@ export default function HomePage() {
           <span>STUDENT SERVICES / COUNCIL OPERATIONS</span>
         </div>
       </section>
+
+      <CourseShowcase />
 
       <section className="services-section wrap" id="services">
         <div className="section-heading">
