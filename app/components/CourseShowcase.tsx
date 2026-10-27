@@ -18,18 +18,27 @@ const rotationDuration = 6200;
 export default function CourseShowcase() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [motionAllowed, setMotionAllowed] = useState(false);
   const activeCourse = courses[activeIndex];
 
   useEffect(() => {
     const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
-    if (isPaused || motionPreference.matches) return;
+    const updateMotionPreference = () => setMotionAllowed(!motionPreference.matches);
+
+    updateMotionPreference();
+    motionPreference.addEventListener('change', updateMotionPreference);
+    return () => motionPreference.removeEventListener('change', updateMotionPreference);
+  }, []);
+
+  useEffect(() => {
+    if (isPaused || !motionAllowed) return;
 
     const timer = window.setInterval(() => {
       setActiveIndex((current) => (current + 1) % courses.length);
     }, rotationDuration);
 
     return () => window.clearInterval(timer);
-  }, [activeIndex, isPaused]);
+  }, [activeIndex, isPaused, motionAllowed]);
 
   function showCourse(index: number) {
     setActiveIndex((index + courses.length) % courses.length);
@@ -59,6 +68,16 @@ export default function CourseShowcase() {
           aria-roledescription="carousel"
           aria-label="New courses at Landmark University"
         >
+          <video
+            className="course-stage-video"
+            src="/assets/campus.mp4"
+            autoPlay={motionAllowed}
+            loop
+            muted
+            playsInline
+            aria-hidden="true"
+            tabIndex={-1}
+          />
           <div className="course-stage-grain" />
           <div className="course-stage-inner">
             <div className="course-main">

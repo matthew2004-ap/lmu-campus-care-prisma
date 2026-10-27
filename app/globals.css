@@ -1360,7 +1360,6 @@
 }
 
 .course-stage::before,
-.course-stage::after,
 .course-stage-grain {
   position: absolute;
   inset: 0;
@@ -1370,17 +1369,23 @@
 
 .course-stage::before {
   content: '';
-  background: url('/assets/campus.jpeg') center 48% / cover;
-  opacity: .31;
-  transform: scale(1.06);
-  animation: course-backdrop-drift 28s ease-in-out infinite alternate;
+  z-index: -1;
+  background:
+    linear-gradient(90deg, rgba(3, 29, 18, .83) 0%, rgba(3, 35, 21, .78) 46%, rgba(3, 31, 20, .66) 100%),
+    linear-gradient(0deg, rgba(3, 24, 15, .55), transparent 38%);
 }
 
-.course-stage::after {
-  content: '';
-  background:
-    linear-gradient(90deg, rgba(3, 29, 18, .98) 0%, rgba(3, 35, 21, .91) 46%, rgba(3, 31, 20, .74) 100%),
-    linear-gradient(0deg, rgba(3, 24, 15, .55), transparent 38%);
+.course-stage-video {
+  position: absolute;
+  inset: -10px;
+  z-index: -2;
+  width: calc(100% + 20px);
+  height: calc(100% + 20px);
+  object-fit: cover;
+  opacity: .52;
+  filter: blur(5px) brightness(.78);
+  transform: scale(1.04);
+  animation: course-backdrop-drift 28s ease-in-out infinite alternate;
 }
 
 .course-stage-grain {
@@ -1724,6 +1729,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .course-stage::before,
+  .course-stage-video,
   .course-copy,
   .course-progress-fill {
     animation: none;
