@@ -54,6 +54,14 @@ export default function HomePage() {
           <Link href="#services">Services</Link>
           <Link href="#how">How it works</Link>
           <Link href="/auth?portal=student">Student sign in</Link>
+          <Link
+            className="nav-cta"
+            href="https://cms.lmu.edu.ng/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Online Learning <ArrowUpRight size={16} />
+          </Link>
           <Link className="nav-cta" href="/auth?portal=council">
             Council access <ArrowUpRight size={16} />
           </Link>
@@ -90,6 +98,14 @@ export default function HomePage() {
             <div className="hero-buttons">
               <Link className="button button-gold" href="/auth?portal=student">
                 Enter Student Portal <ArrowUpRight size={17} />
+              </Link>
+              <Link
+                className="button button-light"
+                href="https://cms.lmu.edu.ng/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Online Learning Platform <ArrowUpRight size={17} />
               </Link>
               <Link className="button button-outline" href="/auth?portal=council">
                 <ShieldCheck size={17} /> Council Access
@@ -238,6 +254,13 @@ export default function HomePage() {
           <p>A more organised, transparent campus support experience.</p>
           <div>
             <Link href="/auth?portal=student">Student portal</Link>
+            <Link
+              href="https://cms.lmu.edu.ng/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Online learning
+            </Link>
             <Link href="/auth?portal=council">Council access</Link>
           </div>
         </div>
