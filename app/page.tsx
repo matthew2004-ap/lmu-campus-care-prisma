@@ -56,6 +56,14 @@ export default function HomePage() {
           <Link href="/auth?portal=student">Student sign in</Link>
           <Link
             className="nav-cta"
+            href="https://portal.lmu.edu.ng/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            University Portal <ArrowUpRight size={16} />
+          </Link>
+          <Link
+            className="nav-cta"
             href="https://cms.lmu.edu.ng/"
             target="_blank"
             rel="noopener noreferrer"
@@ -98,6 +106,14 @@ export default function HomePage() {
             <div className="hero-buttons">
               <Link className="button button-gold" href="/auth?portal=student">
                 Enter Student Portal <ArrowUpRight size={17} />
+              </Link>
+              <Link
+                className="button button-light"
+                href="https://portal.lmu.edu.ng/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                LMU University Portal <ArrowUpRight size={17} />
               </Link>
               <Link
                 className="button button-light"
@@ -254,6 +270,13 @@ export default function HomePage() {
           <p>A more organised, transparent campus support experience.</p>
           <div>
             <Link href="/auth?portal=student">Student portal</Link>
+            <Link
+              href="https://portal.lmu.edu.ng/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              University portal
+            </Link>
             <Link
               href="https://cms.lmu.edu.ng/"
               target="_blank"
