@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     response.cookies.set(SESSION_COOKIE, token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/', maxAge: 604800 });
     return response;
   } catch (e) {
-    const message = e instanceof Error && e.message.includes('AUTH_SECRET') ? e.message : 'Unable to sign in. Check your database and configuration.';
+    const message = e instanceof Error && e.message.includes('AUTH_SECRET') ? e.message : 'Unable to sign in. Check your internet connection.';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
