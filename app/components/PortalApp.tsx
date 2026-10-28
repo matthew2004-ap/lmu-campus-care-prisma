@@ -2,13 +2,15 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Activity, AlertTriangle, ArrowRight, CalendarDays, Check, CheckCircle2, ChevronDown, CircleHelp, Clock3, FileText, Home, ImagePlus, LayoutDashboard, LogOut, Menu, MessageSquare, PackageCheck, Plus, Search, ShieldCheck, Truck, UserRound, Users, Wrench, X } from 'lucide-react';
-
+import { Activity, AlertTriangle, ArrowRight, CalendarDays, Check, CheckCircle2, ChevronDown, CircleHelp, Clock3, FileText, Home, ImagePlus, LayoutDashboard,BookOpen,LogOut, Menu, MessageSquare, PackageCheck, Plus, Search, ShieldCheck, Truck, UserRound, Users, Wrench, X } from 'lucide-react';
+import CoursesView from './CoursesView';
 import MessagingView from './MessagingView';
 import NotificationBell from './NotificationBell';
 
 type User = {id:string; name:string; email:string; matric?:string|null; hall?:string|null; avatar?:string|null; role:string; councilRole?:string|null};
-type Data = {user:User; council:boolean; arrivals:any[]; gates:any[]; lost:any[]; found:any[]; hostel:any[]; audit:any[]};
+type Data = {user:User; council:boolean; arrivals:any[]; gates:any[]; lost:any[]; found:any[]; hostel:any[]; audit:any[];
+  courses: any[];
+};
 const fmtDate=(v:string)=>v?new Date(v).toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'}):'—';
 const money=(v:number)=>new Intl.NumberFormat('en-NG',{style:'currency',currency:'NGN',maximumFractionDigits:0}).format(v||0);
 const statusLabel=(s:string)=>String(s||'').replaceAll('_',' ').toLowerCase().replace(/\b\w/g,x=>x.toUpperCase());
@@ -26,6 +28,7 @@ export default function PortalApp({portal='student'}:{portal?:string}){
  const logout=async()=>{await fetch('/api/auth/logout',{method:'POST'});router.replace('/');router.refresh()};
 const navStudent:any[]=[
   ['dashboard','Overview',LayoutDashboard],
+  ['courses', 'Newly Added Courses', BookOpen],
   ['arrival','Arrival Desk',PackageCheck],
   ['gate','Official Gate Date',CalendarDays],
   ['lost','Lost & Found',Search],
@@ -73,6 +76,16 @@ const navStudent:any[]=[
  if(!data||!user)return <div className="loading-screen">{error||'Redirecting to sign in…'} <Link href="/auth">Sign in</Link></div>;
  return <div className="portal-shell"><aside className={`portal-sidebar ${mobileMenu?'open':''}`}><div className="brand sidebar-brand"><Link href="/" className="brand-link"><img src="/assets/landmark-logo.jpeg" alt="Landmark University logo"/><span><b>LANDMARK UNIVERSITY</b><small>CAMPUS CARE</small></span></Link><button className="mobile-close" onClick={()=>setMobileMenu(false)} aria-label="Close menu"><X/></button></div><div className="workspace-label">{council?'COUNCIL WORKSPACE':'STUDENT WORKSPACE'}</div><nav className="side-nav">{nav.map(([id,label,Icon]:any)=><button key={id} onClick={()=>{setTab(id);setSearch('');setMobileMenu(false)}} className={tab===id?'active':''}><Icon size={18}/><span>{label}</span>{id==='arrival'&&council&&<small>{(data.arrivals||[]).filter((a:any)=>!['DELIVERED','READY_FOR_PICKUP'].includes(a.status)).length}</small>}</button>)}</nav><div className="sidebar-bottom"><div className="sidebar-help"><CircleHelp size={18}/><div><b>Need assistance?</b><small>Contact your student council team.</small></div></div><button className="side-logout" onClick={logout}><LogOut size={17}/> Sign out</button></div></aside><div className="portal-main"><header className="portal-topbar"><button className="mobile-menu" onClick={()=>setMobileMenu(true)} aria-label="Open menu"><Menu/></button><div className="breadcrumb"><Link href="/">Home</Link><span>/</span><b>{title}</b></div><div className="topbar-right"><span className="topbar-live"><i/> {council?'Council operations':'Student portal'}</span><NotificationBell /><div className="top-user"><div className="avatar-small">{user.avatar?<img src={user.avatar} alt=""/>:user.name.split(' ').map(x=>x[0]).slice(0,2).join('').toUpperCase()}</div><div><b>{user.name}</b><small>{council?String(role).toUpperCase():user.matric||'Student account'}</small></div><ChevronDown size={15}/></div></div></header><main className="portal-content"><div className="portal-heading"><div><div className="section-kicker">{council?'CAMPUS CARE / COUNCIL':'LANDMARK UNIVERSITY / STUDENT SERVICES'}</div><h1>{title}</h1><p>{council?`Welcome back. Your ${role.toUpperCase()} workspace is ready for today's operations.`:'Your campus services, requests and updates in one place.'}</p></div><div className="heading-date"><CalendarDays size={17}/>{new Date().toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short',year:'numeric'})}</div></div>{error&&<div className="alert alert-error"><AlertTriangle size={17}/>{error}<button onClick={()=>setError('')} aria-label="Dismiss"><X size={15}/></button></div>}{notice&&<div className="alert alert-success"><CheckCircle2 size={17}/>{notice}<button onClick={()=>setNotice('')} aria-label="Dismiss"><X size={15}/></button></div>}
  {tab==='dashboard'&&<Dashboard data={data} council={council} role={role} setTab={setTab}/>}
+ {tab === 'courses' && (
+  <CoursesView
+    rows={data.courses || []}
+    canManage={council && role === 'vcm'}
+    busy={busy}
+    act={act}
+    search={search}
+    setSearch={setSearch}
+  />
+ )}
  {tab==='arrival'&&<ArrivalView data={data} council={council} role={role} busy={busy} act={act} rows={arrivals} search={search} setSearch={setSearch}/>}
  {tab==='gate'&&<GateView data={data} council={council} role={role} busy={busy} act={act}/>}
  {tab==='lost'&&<LostView data={data} council={council} role={role} busy={busy} act={act} rows={lost} search={search} setSearch={setSearch}/>}

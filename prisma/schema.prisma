@@ -214,3 +214,19 @@ model MessageAttachment {
   @@index([message_id])
   @@map("message_attachments")
 }
+
+model CourseAnnouncement {
+  id          String   @id @default(uuid()) @db.Uuid
+  title       String   @db.VarChar(180)
+  course_code String   @db.VarChar(40)
+  department  String   @db.VarChar(160)
+  level       String   @db.VarChar(20)
+  description String   @db.Text
+  active      Boolean  @default(true)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  @@index([active, created_at])
+  @@index([department, level])
+  @@map("course_announcements")
+}

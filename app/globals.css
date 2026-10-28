@@ -1739,3 +1739,139 @@
     transform: scaleX(1);
   }
 }
+
+
+
+
+/* Newly Added Courses */
+
+.courses-intro {
+  display: flex;
+  align-items: flex-start;
+  gap: 17px;
+  background: linear-gradient(120deg, #f0f6ed, #fff);
+}
+
+.courses-intro-icon {
+  width: 54px;
+  height: 54px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  border-radius: 15px;
+  background: #e2efe1;
+  color: var(--green);
+}
+
+.courses-intro h3 {
+  font-size: 20px;
+  margin: 7px 0 6px;
+}
+
+.courses-intro p {
+  margin: 0;
+  max-width: 760px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.course-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.course-card {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 17px;
+  min-width: 0;
+  background: #fff;
+}
+
+.course-card-top,
+.course-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.course-code {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--green);
+  background: #eaf3e8;
+  border-radius: 7px;
+  padding: 7px 9px;
+}
+
+.course-level {
+  font-size: 10px;
+  font-weight: 800;
+  color: #8c6b1f;
+  background: #fbf4df;
+  border-radius: 7px;
+  padding: 6px 9px;
+}
+
+.course-card h4 {
+  font-size: 15px;
+  line-height: 1.4;
+  margin: 15px 0 5px;
+}
+
+.course-department {
+  font-size: 11px;
+  font-weight: 700;
+  color: #637568;
+  margin: 0 0 11px;
+}
+
+.course-description {
+  font-size: 12px;
+  line-height: 1.75;
+  color: var(--muted);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.course-card-footer {
+  border-top: 1px solid #edf1ec;
+  padding-top: 11px;
+  margin-top: 14px;
+  font-size: 10px;
+  color: #89958a;
+}
+
+.course-card-footer .inline-actions {
+  display: flex;
+  gap: 6px;
+}
+
+@media (max-width: 760px) {
+  .course-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .courses-intro {
+    gap: 12px;
+    padding: 15px;
+  }
+
+  .courses-intro-icon {
+    width: 43px;
+    height: 43px;
+    border-radius: 12px;
+  }
+
+  .courses-intro h3 {
+    font-size: 17px;
+  }
+
+  .course-card {
+    padding: 14px;
+  }
+}

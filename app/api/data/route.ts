@@ -30,15 +30,20 @@ export async function GET() {
     const canSeeHostel = !council || ['welfare', 'vcm'].includes(role);
     const canSeeGates = !council || ['welfare', 'vcm'].includes(role);
     const studentWhere = council ? {} : { student_id: user.id };
-    const [arrivals, gates, lost, found, hostel, audit] = await Promise.all([
+    const [arrivals, gates, lost, found, hostel, audit,courses] = await Promise.all([
       canSeeArrivals ? prisma.arrivalRequest.findMany({ where: !council ? { student_id: user.id } : role === 'transport' ? { delivery_method: 'transport' } : {}, include: { student: { select: profileSelect } }, orderBy: { created_at: 'desc' }, take: 300 }) : Promise.resolve([]),
       canSeeGates ? prisma.gateSchedule.findMany({ where: council ? {} : { active: true }, orderBy: [{ active: 'desc' }, { gate_date: 'asc' }], take: 100 }) : Promise.resolve([]),
       canSeeLost ? prisma.lostReport.findMany({ where: council ? {} : { student_id: user.id }, include: { student: { select: profileSelect } }, orderBy: { created_at: 'desc' }, take: 300 }) : Promise.resolve([]),
       canSeeFound ? prisma.foundItem.findMany({ where: council ? {} : { status: { in: ['available', 'claim_pending', 'claimed'] } }, orderBy: { created_at: 'desc' }, take: 300 }) : Promise.resolve([]),
       canSeeHostel ? prisma.hostelReport.findMany({ where: !council ? { student_id: user.id } : {}, include: { student: { select: profileSelect } }, orderBy: { created_at: 'desc' }, take: 300 }) : Promise.resolve([]),
-      role === 'vcm' ? prisma.auditLog.findMany({ orderBy: { created_at: 'desc' }, take: 60 }) : Promise.resolve([])
+      role === 'vcm' ? prisma.auditLog.findMany({ orderBy: { created_at: 'desc' }, take: 60 }) : Promise.resolve([]),
+      prisma.courseAnnouncement.findMany({
+        where: council && role === 'vcm' ? {} : { active: true },
+        orderBy: { created_at: 'desc' },
+        take: 200,
+      }),
     ]);
-    return NextResponse.json({ user, council, arrivals, gates, lost, found, hostel, audit });
+    return NextResponse.json({ user, council, arrivals, gates, lost, found, hostel, audit, courses });
   } catch (e) { console.error('Campus Care data load:', e); return jsonError('Could not load portal data. Check that the database schema is up to date.', 500); }
 }
 
@@ -50,6 +55,127 @@ export async function POST(req: Request) {
     const action = str(b.action, 80);
     const council = isCouncil(user);
     const log = (message: string, severity = 'info') => addAudit(user.id, user.name, message, severity);
+
+    if (action === 'course.create') {
+      if (user.role !== 'council' || user.councilRole !== 'vcm') {
+        return jsonError(
+          'Only the VCM account can publish course announcements.',
+          403
+        );
+      }
+
+      const title = str(b.title, 180);
+      const code = str(b.courseCode, 40).toUpperCase();
+      const department = str(b.department, 160);
+      const level = str(b.level, 20);
+      const description = str(b.description, 3000);
+      const allowedLevels = ['100L', '200L', '300L', '400L', '500L', 'All levels'];
+
+      if (
+        title.length < 3 ||
+        code.length < 2 ||
+        department.length < 2 ||
+        !allowedLevels.includes(level) ||
+        description.length < 10
+      ) {
+        return jsonError(
+          'Enter a valid course title, code, department, level, and description.'
+        );
+      }
+
+      const course = await prisma.courseAnnouncement.create({
+        data: {
+          title,
+          course_code: code,
+          department,
+          level,
+          description,
+        },
+      });
+
+      await addAudit(
+        user.id,
+        user.name,
+        `Published course announcement: ${code} — ${title}.`
+      );
+
+      return NextResponse.json({ ok: true, course }, { status: 201 });
+    }
+
+    if (action === 'course.update') {
+      if (user.role !== 'council' || user.councilRole !== 'vcm') {
+        return jsonError(
+          'Only the VCM account can edit course announcements.',
+          403
+        );
+      }
+
+      const id = str(b.id, 80);
+      const title = str(b.title, 180);
+      const code = str(b.courseCode, 40).toUpperCase();
+      const department = str(b.department, 160);
+      const level = str(b.level, 20);
+      const description = str(b.description, 3000);
+      const allowedLevels = ['100L', '200L', '300L', '400L', '500L', 'All levels'];
+
+      if (
+        !id ||
+        title.length < 3 ||
+        code.length < 2 ||
+        department.length < 2 ||
+        !allowedLevels.includes(level) ||
+        description.length < 10
+      ) {
+        return jsonError('Enter valid course details.');
+      }
+
+      const course = await prisma.courseAnnouncement.update({
+        where: { id },
+        data: {
+          title,
+          course_code: code,
+          department,
+          level,
+          description,
+        },
+      });
+
+      await addAudit(
+        user.id,
+        user.name,
+        `Updated course announcement: ${code} — ${title}.`
+      );
+
+      return NextResponse.json({ ok: true, course });
+    }
+
+    if (action === 'course.delete') {
+      if (user.role !== 'council' || user.councilRole !== 'vcm') {
+        return jsonError(
+          'Only the VCM account can archive course announcements.',
+          403
+        );
+      }
+
+      const id = str(b.id, 80);
+
+      if (!id) {
+        return jsonError('Course reference is required.');
+      }
+
+      const course = await prisma.courseAnnouncement.update({
+        where: { id },
+        data: { active: false },
+      });
+
+      await addAudit(
+        user.id,
+        user.name,
+        `Archived course announcement: ${course.course_code} — ${course.title}.`
+      );
+
+      return NextResponse.json({ ok: true });
+    }
 
     if (action === 'profile.update') {
       if (council) return jsonError('Council profile changes must be made by the administrator.', 403);
