@@ -36,7 +36,8 @@ const navStudent:any[]=[
   ['messages','Messages',MessageSquare],
   ['profile','My Profile',UserRound]
 ];
- const navCouncil = (
+ 
+const navCouncil = (
   role === 'welfare'
     ? [
         ['dashboard', 'Overview', LayoutDashboard],
@@ -57,6 +58,17 @@ const navStudent:any[]=[
         ['lost', 'Lost & Found', Search],
         ['messages', 'Messages', MessageSquare],
       ]
+    : role === 'vcm'
+    ? [
+        ['dashboard', 'Overview', LayoutDashboard],
+        ['courses', 'Newly Added Courses', BookOpen],
+        ['arrival', 'Arrival Desk', PackageCheck],
+        ['gate', 'Gate Schedule', CalendarDays],
+        ['lost', 'Lost & Found', Search],
+        ['hostel', 'Hostel Watch', Wrench],
+        ['audit', 'Activity Log', Activity],
+        ['messages', 'Messages', MessageSquare],
+      ]
     : [
         ['dashboard', 'Overview', LayoutDashboard],
         ['arrival', 'Arrival Desk', PackageCheck],
@@ -66,6 +78,9 @@ const navStudent:any[]=[
         ['audit', 'Activity Log', Activity],
         ['messages', 'Messages', MessageSquare],
       ]
+
+
+
 ) as any[];
  const nav:any[]=council?navCouncil:navStudent;
  const title=nav.find(n=>n[0]===tab)?.[1]||'Overview';
