@@ -47,7 +47,17 @@ async function send(action:string,body:any={}){const r=await fetch('/api/data',{
 function readImage(file?:File):Promise<string>{return new Promise((resolve,reject)=>{if(!file)return resolve('');if(!file.type.startsWith('image/'))return reject(new Error('Choose an image file.'));if(file.size>3_000_000)return reject(new Error('Image must be 3 MB or smaller.'));const r=new FileReader();r.onload=()=>resolve(String(r.result||''));r.onerror=()=>reject(new Error('Could not read image.'));r.readAsDataURL(file)})}
 
 export default function PortalApp({portal='student'}:{portal?:string}){
- const router=useRouter();const [data,setData]=useState<Data|null>(null);const [loading,setLoading]=useState(true);const [error,setError]=useState('');const [notice,setNotice]=useState('');const [busy,setBusy]=useState(false);const [tab,setTab]=useState('dashboard');const [mobileMenu,setMobileMenu]=useState(false);const [search,setSearch]=useState('');
+ const router=useRouter();const [data,setData]=useState<Data|null>(null);const [loading,setLoading]=useState(true);const [error,setError]=useState('');const [notice,setNotice]=useState('');
+ useEffect(() => {
+  if (!notice) return;
+
+  const timer = setTimeout(() => {
+    setNotice('');
+  }, 4000);
+
+  return () => clearTimeout(timer);
+}, [notice]);
+ const [busy,setBusy]=useState(false);const [tab,setTab]=useState('dashboard');const [mobileMenu,setMobileMenu]=useState(false);const [search,setSearch]=useState('');
  const load=useCallback(async()=>{try{const r=await fetch('/api/data',{cache:'no-store'});const d=await r.json();if(r.status===401){router.replace('/auth');return}if(!r.ok)throw new Error(d.error||'Could not load portal');setData(d);setError('')}catch(e){setError(e instanceof Error?e.message:'Unable to load data.')}finally{setLoading(false)}},[router]);
  useEffect(()=>{load()},[load]);
  const user=data?.user;const council=Boolean(data?.council);const role=user?.councilRole||'vcm';
