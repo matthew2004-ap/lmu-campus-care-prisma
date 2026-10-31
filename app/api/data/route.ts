@@ -189,6 +189,18 @@ export async function POST(req: Request) {
 
     if (action === 'arrival.create') {
       if (council) return jsonError('Only students can register incoming goods.', 403);
+const profile = await prisma.profile.findUnique({
+  where: { id: user.id },
+  select: { matric_no: true },
+});
+
+if (!profile?.matric_no) {
+  return jsonError(
+    'Please complete your profile and add your matric number before submitting requests.',
+    403
+  );
+}
+
       const item = str(b.itemDescription, 500); const quantity = Number(b.quantity); const expected = new Date(b.expectedDate);
       if (!item || !Number.isInteger(quantity) || quantity < 1 || quantity > 100 || Number.isNaN(expected.getTime())) return jsonError('Enter an item description, valid quantity, and expected arrival date.');
       const method = b.deliveryMethod === 'transport' ? 'transport' : 'self';
@@ -247,6 +259,18 @@ export async function POST(req: Request) {
     }
     if (action === 'found.claim') {
       if (council) return jsonError('Only students can request to claim found items.', 403);
+const profile = await prisma.profile.findUnique({
+  where: { id: user.id },
+  select: { matric_no: true },
+});
+
+if (!profile?.matric_no) {
+  return jsonError(
+    'Please complete your profile and add your matric number before submitting requests.',
+    403
+  );
+}
+
       const foundId = str(b.foundId, 80); const lostId = str(b.lostId, 80);
       const [found, lost] = await Promise.all([prisma.foundItem.findUnique({ where: { id: foundId } }), prisma.lostReport.findFirst({ where: { id: lostId, student_id: user.id } })]);
       if (!found || !lost) return jsonError('Found item or your lost-item report could not be found.', 404);
@@ -265,6 +289,17 @@ export async function POST(req: Request) {
     }
     if (action === 'hostel.create') {
       if (council) return jsonError('Only students can submit Hostel Watch reports.', 403);
+      const profile = await prisma.profile.findUnique({
+  where: { id: user.id },
+  select: { matric_no: true },
+});
+
+if (!profile?.matric_no) {
+  return jsonError(
+    'Please complete your profile and add your matric number before submitting requests.',
+    403
+  );
+}
       const hall = str(b.hall, 120); const area = str(b.roomArea, 120); const issue = str(b.issueType, 100); const priority = str(b.priority, 20); const description = str(b.description, 2500);
       if (!hall || !area || !issue || description.length < 10 || !['High', 'Medium', 'Low'].includes(priority)) return jsonError('Complete all report fields and provide a detailed description.');
       const report = await prisma.hostelReport.create({ data: { student_id: user.id, hall, room_area: area, issue_type: issue, priority, description } });
