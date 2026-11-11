@@ -25,10 +25,10 @@ export async function GET() {
     const council = isCouncil(user);
     const role = user.councilRole || '';
     const canSeeArrivals = !council || ['welfare', 'transport'].includes(role);
-    const canSeeLost = !council || ['pro', 'vcm'].includes(role);
-    const canSeeFound = !council || ['pro', 'vcm'].includes(role);
+    const canSeeLost = !council || role === 'pro';
+    const canSeeFound = !council || role === 'pro';
     const canSeeHostel = !council || role === 'vcm';
-    const canSeeGates = !council || ['welfare', 'vcm'].includes(role);
+    const canSeeGates = !council || role === 'welfare';
     const studentWhere = council ? {} : { student_id: user.id };
     const [arrivals, gates, lost, found, hostel, audit, courses] = await Promise.all([
       canSeeArrivals ? prisma.arrivalRequest.findMany({ where: !council ? { student_id: user.id } : role === 'transport' ? { delivery_method: 'transport' } : {}, include: { student: { select: profileSelect } }, orderBy: { created_at: 'desc' }, take: 300 }) : Promise.resolve([]),
@@ -228,7 +228,7 @@ export async function POST(req: Request) {
       await log(`Updated package ${id} to ${updated.status}.`); return NextResponse.json({ ok: true, record: updated });
     }
     if (action === 'gate.create') {
-      if (!roleIs(user, 'welfare', 'vcm')) return jsonError('Only Welfare or VCM can publish official gate schedules.', 403);
+      if (!roleIs(user, 'welfare')) return jsonError('Only Welfare can publish official gate schedules.', 403);
       const date = new Date(b.gateDate); const opening = str(b.openingTime, 10); const closing = str(b.closingTime, 10); const days = Array.isArray(b.days) ? b.days.map((x: unknown) => str(x, 20)).filter(Boolean).slice(0, 7) : [];
       if (Number.isNaN(date.getTime()) || !opening || !closing || days.length === 0) return jsonError('Choose a date, opening and closing times, and at least one working day.');
       if (b.active !== false) await prisma.gateSchedule.updateMany({ where: { active: true }, data: { active: false } });
@@ -236,7 +236,7 @@ export async function POST(req: Request) {
       await log('Published an Official Gate Date schedule.', 'success'); return NextResponse.json({ ok: true, record: gate }, { status: 201 });
     }
     if (action === 'gate.toggle') {
-      if (!roleIs(user, 'welfare', 'vcm')) return jsonError('Only Welfare or VCM can manage schedules.', 403);
+      if (!roleIs(user, 'welfare')) return jsonError('Only Welfare can manage schedules.', 403);
       const id = str(b.id, 80); const gate = await prisma.gateSchedule.update({ where: { id }, data: { active: Boolean(b.active) } });
       if (gate.active) await prisma.gateSchedule.updateMany({ where: { active: true, id: { not: id } }, data: { active: false } });
       await log(`${gate.active ? 'Activated' : 'Archived'} a gate schedule.`); return NextResponse.json({ ok: true, record: gate });
@@ -250,7 +250,7 @@ export async function POST(req: Request) {
       await log(`Submitted a lost-item report: ${item}.`); return NextResponse.json({ ok: true, record: report }, { status: 201 });
     }
     if (action === 'found.create') {
-      if (council && !roleIs(user, 'pro', 'vcm')) return jsonError('Only P.R.O. or VCM can publish council found-item reports.', 403);
+      if (council && !roleIs(user, 'pro')) return jsonError('Only P.R.O. can publish council found-item reports.', 403);
       const item = str(b.itemName, 160); const location = str(b.location, 200); const description = str(b.description, 2000);
       if (!item || !location || description.length < 5) return jsonError('Enter the item name, found location, and description.');
       const image = imageData(b.image);
@@ -279,7 +279,7 @@ export async function POST(req: Request) {
       await log(`Requested a claim for found item ${found.item_name}.`); return NextResponse.json({ ok: true });
     }
     if (action === 'found.review') {
-      if (!roleIs(user, 'pro', 'vcm')) return jsonError('Only P.R.O. or VCM can review item claims.', 403);
+      if (!roleIs(user, 'pro')) return jsonError('Only P.R.O. can review item claims.', 403);
       const id = str(b.id, 80); const approve = Boolean(b.approve); const found = await prisma.foundItem.findUnique({ where: { id } });
       if (!found || found.status !== 'claim_pending') return jsonError('There is no pending claim for this item.');
       const status = approve ? 'claimed' : 'available';

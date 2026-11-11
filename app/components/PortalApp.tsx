@@ -100,8 +100,6 @@ export default function PortalApp({ portal = 'student' }: { portal?: string }) {
             ? [
               ['dashboard', 'Overview', LayoutDashboard],
               ['courses', 'Newly Added Courses', BookOpen],
-              ['gate', 'Gate Schedule', CalendarDays],
-              ['lost', 'Lost & Found', Search],
               ['hostel', 'Hostel Watch', Wrench],
               ['audit', 'Activity Log', Activity],
               ['messages', 'Messages', MessageSquare],
@@ -190,7 +188,7 @@ export default function PortalApp({ portal = 'student' }: { portal?: string }) {
         </button>
       </div>
     )}
-    {tab === 'dashboard' && (council && role === 'welfare' ? <WelfareDashboard data={data} setTab={setTab} /> : <Dashboard data={data} council={council} role={role} setTab={setTab} />)}
+    {tab === 'dashboard' && (council && role === 'welfare' ? <WelfareDashboard data={data} setTab={setTab} /> : council && role === 'vcm' ? <VcmDashboard data={data} setTab={setTab} /> : <Dashboard data={data} council={council} role={role} setTab={setTab} />)}
     {tab === 'courses' && (
       <CoursesView
         rows={data.courses || []}
@@ -265,6 +263,20 @@ function WelfareDashboard({ data, setTab }: any) {
     <section className="welcome-banner"><div><span className="banner-kicker">WELFARE OPERATIONS</span><h2>Package delivery overview.</h2><p>Review incoming goods and check delivery progress by registration date.</p><button className="button button-gold button-small" onClick={() => setTab('arrival')}>Open delivery history <ArrowRight size={15} /></button></div><div className="banner-illustration"><div className="illustration-ring"><PackageCheck size={46} /></div></div></section>
     <div className="stat-grid">{cards.map(({ label, value, icon: Icon }) => <div className="stat-card" key={label}><div className="stat-icon"><Icon size={20} /></div><div><span>{label}</span><strong>{value}</strong></div></div>)}</div>
   </>
+}
+function VcmDashboard({ data, setTab }: any) {
+  const courses = data.courses || [];
+  const hostel = data.hostel || [];
+  const audit = data.audit || [];
+  const cards = [
+    { label: 'Course announcements', value: courses.length, icon: BookOpen },
+    { label: 'Open hostel issues', value: hostel.filter((item: any) => !['Resolved', 'Rejected'].includes(item.status)).length, icon: Wrench },
+    { label: 'Recent activities', value: audit.length, icon: Activity },
+  ];
+  return <>
+    <section className="welcome-banner"><div><span className="banner-kicker">VCM OPERATIONS</span><h2>Campus coordination overview.</h2><p>Manage course announcements, Hostel Watch reports, and council activity.</p><button className="button button-gold button-small" onClick={() => setTab('courses')}>Open course announcements <ArrowRight size={15} /></button></div><div className="banner-illustration"><div className="illustration-ring"><Activity size={46} /></div></div></section>
+    <div className="stat-grid">{cards.map(({ label, value, icon: Icon }) => <div className="stat-card" key={label}><div className="stat-icon"><Icon size={20} /></div><div><span>{label}</span><strong>{value}</strong></div></div>)}</div>
+  </>;
 }
 function Empty({ title, text }: { title: string; text: string }) { return <div className="empty-state"><div><FileText size={23} /></div><b>{title}</b><p>{text}</p></div> }
 function Field({ label, children, wide = false, hint }: { label: string; children: any; wide?: boolean; hint?: string }) { return <label className={`form-field ${wide ? 'wide' : ''}`}><span>{label}</span>{children}{hint && <small>{hint}</small>}</label> }
