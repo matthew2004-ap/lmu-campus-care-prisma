@@ -80,7 +80,7 @@ export default function PortalApp({ portal = 'student' }: { portal?: string }) {
     role === 'welfare'
       ? [
         ['dashboard', 'Overview', LayoutDashboard],
-        ['arrival', 'Delivery History', CalendarDays],
+        ['arrival', 'Arrival Desk', PackageCheck],
         ['gate', 'Gate Schedule', CalendarDays],
         ['messages', 'Messages', MessageSquare],
       ]
@@ -100,7 +100,6 @@ export default function PortalApp({ portal = 'student' }: { portal?: string }) {
             ? [
               ['dashboard', 'Overview', LayoutDashboard],
               ['courses', 'Newly Added Courses', BookOpen],
-              ['arrival', 'Arrival Desk', PackageCheck],
               ['gate', 'Gate Schedule', CalendarDays],
               ['lost', 'Lost & Found', Search],
               ['hostel', 'Hostel Watch', Wrench],
@@ -202,7 +201,7 @@ export default function PortalApp({ portal = 'student' }: { portal?: string }) {
         setSearch={setSearch}
       />
     )}
-    {tab === 'arrival' && (council && role === 'welfare' ? <DeliveryHistoryView /> : <ArrivalView data={data} council={council} role={role} busy={busy} act={act} rows={arrivals} search={search} setSearch={setSearch} />)}
+    {tab === 'arrival' && (council && role === 'welfare' ? <WelfareArrivalView data={data} busy={busy} act={act} rows={arrivals} search={search} setSearch={setSearch} /> : <ArrivalView data={data} council={council} role={role} busy={busy} act={act} rows={arrivals} search={search} setSearch={setSearch} />)}
     {tab === 'gate' && <GateView data={data} council={council} role={role} busy={busy} act={act} />}
     {tab === 'lost' && <LostView data={data} council={council} role={role} busy={busy} act={act} rows={lost} search={search} setSearch={setSearch} />}
     {tab === 'hostel' && <HostelView data={data} council={council} role={role} busy={busy} act={act} rows={hostel} search={search} setSearch={setSearch} />}
@@ -212,6 +211,16 @@ export default function PortalApp({ portal = 'student' }: { portal?: string }) {
     <footer className="portal-footer"><span>© {new Date().getFullYear()} Landmark University Campus Care</span><span><ShieldCheck size={14} /> Secure role-based workspace</span></footer></main></div></div>
 }
 function Dashboard({ data, council, role, setTab }: any) { const requests = data.arrivals || [], lost = data.lost || [], found = data.found || [], hostel = data.hostel || []; const cards = council ? [{ label: 'Packages to process', value: requests.filter((x: any) => !['DELIVERED', 'READY_FOR_PICKUP'].includes(x.status)).length, icon: PackageCheck, tone: 'green' }, { label: 'Lost-item reports', value: lost.filter((x: any) => !['claimed', 'cleared'].includes(x.status)).length, icon: Search, tone: 'gold' }, { label: 'Open hostel issues', value: hostel.filter((x: any) => !['Resolved', 'Rejected'].includes(x.status)).length, icon: Wrench, tone: 'blue' }, { label: 'Found items', value: found.length, icon: CheckCircle2, tone: 'purple' }] : [{ label: 'My packages', value: requests.length, icon: PackageCheck, tone: 'green' }, { label: 'Active lost reports', value: lost.filter((x: any) => !['claimed', 'cleared'].includes(x.status)).length, icon: Search, tone: 'gold' }, { label: 'Hostel reports', value: hostel.length, icon: Wrench, tone: 'blue' }, { label: 'Available found items', value: found.filter((x: any) => x.status === 'available').length, icon: CheckCircle2, tone: 'purple' }]; return <><section className="welcome-banner"><div><span className="banner-kicker">{council ? 'OPERATIONS SNAPSHOT' : 'YOUR CAMPUS, AT A GLANCE'}</span><h2>{council ? 'Make every update count.' : `Hello, ${data.user.name.split(' ')[0]}.`}</h2><p>{council ? 'Review pending work, keep records accurate and help students get timely answers.' : 'Keep an eye on your packages, follow up on reports and find the services you need.'}</p><button className="button button-gold button-small" onClick={() => setTab(council ? (role === 'pro' ? 'lost' : role === 'transport' ? 'arrival' : 'arrival') : 'arrival')}>{council ? 'Open work queue' : 'Track my packages'} <ArrowRight size={15} /></button></div><div className="banner-illustration"><div className="illustration-ring"><PackageCheck size={46} /></div><span className="floating-check"><Check size={15} /></span><span className="floating-star">✦</span></div></section><div className="stat-grid">{cards.map(({ label, value, icon: Icon, tone }: any) => <div className="stat-card" key={label}><div className={`stat-icon ${tone}`}><Icon size={20} /></div><div><strong>{value}</strong><span>{label}</span></div><span className="stat-arrow">↗</span></div>)}</div><div className="dashboard-grid"><section className="panel"><div className="panel-title-row"><div><span className="section-kicker">LATEST UPDATES</span><h3>{council ? 'Recent packages' : 'Recent packages'}</h3></div><button className="text-action" onClick={() => setTab('arrival')}>View all <ArrowRight size={14} /></button></div>{requests.slice(0, 5).map((a: any) => <div className="list-row" key={a.id}><div className="row-icon"><PackageCheck size={18} /></div><div className="row-main"><b>{a.item_description}</b><small>{council ? `${a.student?.full_name || 'Student'} · ${a.student?.matric_no || 'No matric'}` : `Expected ${fmtDate(a.expected_date)}`}</small></div><Status value={a.status} /></div>)}{!requests.length && <Empty title="No package records yet" text={council ? 'New student registrations will appear here.' : 'Register your incoming goods to start tracking them.'} />}</section><section className="panel"><div className="panel-title-row"><div><span className="section-kicker">QUICK ACCESS</span><h3>Campus services</h3></div></div><div className="quick-links">{(council ? (role === 'pro' ? [['lost', 'Review Lost & Found', Search], ['lost', 'Publish found item', Plus]] : role === 'transport' ? [['arrival', 'Delivery queue', Truck]] : role === 'welfare' ? [['arrival', 'Inspect packages', PackageCheck], ['gate', 'Update gate schedule', CalendarDays], ['hostel', 'Review hostel issues', Wrench]] : [['arrival', 'All package records', PackageCheck], ['lost', 'Lost & Found', Search], ['hostel', 'Hostel Watch', Wrench], ['audit', 'Activity log', Activity]]) : [['arrival', 'Register incoming goods', PackageCheck], ['gate', 'Check gate schedule', CalendarDays], ['lost', 'Report missing item', Search], ['hostel', 'Report hostel issue', Wrench]]).map(([id, label, Icon]: any) => <button key={label} onClick={() => setTab(id)}><span><Icon size={18} /></span><b>{label}</b><ArrowRight size={15} /></button>)}</div></section></div>{!council && <section className="panel gate-summary"><div className="gate-summary-icon"><CalendarDays size={24} /></div><div className="gate-summary-copy"><span className="section-kicker">OFFICIAL GATE DATE</span><h3>{data.gates?.[0] ? fmtDate(data.gates[0].gate_date) : 'No active schedule published'}</h3><p>{data.gates?.[0] ? `${(data.gates[0].days || []).join(', ')} · ${data.gates[0].hours}` : 'Check back later for the next official receiving schedule.'}</p></div><button className="button button-light" onClick={() => setTab('gate')}>View schedule <ArrowRight size={15} /></button></section>}</> }
+function WelfareArrivalView({ data, busy, act, rows, search, setSearch }: any) {
+  const [view, setView] = useState('queue');
+  return <div className="stack-lg">
+    <div className="section-tabs">
+      <button className={view === 'queue' ? 'active' : ''} onClick={() => setView('queue')}>Arrival Desk</button>
+      <button className={view === 'history' ? 'active' : ''} onClick={() => setView('history')}>Delivery History</button>
+    </div>
+    {view === 'queue' ? <ArrivalView data={data} council role="welfare" busy={busy} act={act} rows={rows} search={search} setSearch={setSearch} /> : <DeliveryHistoryView />}
+  </div>
+}
 function DeliveryHistoryView() {
   const [date, setDate] = useState('');
   const [status, setStatus] = useState('all');

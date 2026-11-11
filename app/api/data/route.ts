@@ -24,7 +24,7 @@ export async function GET() {
   try {
     const council = isCouncil(user);
     const role = user.councilRole || '';
-    const canSeeArrivals = !council || ['welfare', 'transport', 'vcm'].includes(role);
+    const canSeeArrivals = !council || ['welfare', 'transport'].includes(role);
     const canSeeLost = !council || ['pro', 'vcm'].includes(role);
     const canSeeFound = !council || ['pro', 'vcm'].includes(role);
     const canSeeHostel = !council || role === 'vcm';
@@ -208,10 +208,10 @@ export async function POST(req: Request) {
       await log(`Registered incoming goods: ${item}.`); return NextResponse.json({ ok: true, record }, { status: 201 });
     }
     if (action === 'arrival.update') {
-      if (!roleIs(user, 'welfare', 'transport', 'vcm')) return jsonError('Only authorised Welfare, Transport, or VCM staff can update package records.', 403);
+      if (!roleIs(user, 'welfare', 'transport')) return jsonError('Only authorised Welfare or Transport staff can update package records.', 403);
       const id = str(b.id, 80); const record = await prisma.arrivalRequest.findUnique({ where: { id } }); if (!record) return jsonError('Package record not found.', 404);
       let data: any = {};
-      if (roleIs(user, 'welfare', 'vcm')) {
+      if (roleIs(user, 'welfare')) {
         const allowed = ['SUBMITTED', 'UNDER_INSPECTION', 'READY_FOR_PICKUP', 'IN_TRANSIT', 'DELIVERED', 'ON_HOLD'];
         if (!allowed.includes(b.status)) return jsonError('Invalid package status.');
         data.status = b.status;

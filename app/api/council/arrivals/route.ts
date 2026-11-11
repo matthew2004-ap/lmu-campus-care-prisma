@@ -7,8 +7,8 @@ const profileSelect = { id: true, full_name: true, email: true, matric_no: true 
 export async function GET(request: Request) {
    const user = await getAuth();
    if (!user) return NextResponse.json({ error: 'Please sign in to continue.' }, { status: 401 });
-   if (user.role !== 'council' || !['welfare', 'vcm'].includes(user.councilRole || '')) {
-      return NextResponse.json({ error: 'Only Welfare or VCM can view delivery history.' }, { status: 403 });
+   if (user.role !== 'council' || user.councilRole !== 'welfare') {
+      return NextResponse.json({ error: 'Only Welfare can view delivery history.' }, { status: 403 });
    }
 
    const params = new URL(request.url).searchParams;
