@@ -27,10 +27,10 @@ export async function GET() {
     const canSeeArrivals = !council || ['welfare', 'transport', 'vcm'].includes(role);
     const canSeeLost = !council || ['pro', 'vcm'].includes(role);
     const canSeeFound = !council || ['pro', 'vcm'].includes(role);
-    const canSeeHostel = !council || ['welfare', 'vcm'].includes(role);
+    const canSeeHostel = !council || role === 'vcm';
     const canSeeGates = !council || ['welfare', 'vcm'].includes(role);
     const studentWhere = council ? {} : { student_id: user.id };
-    const [arrivals, gates, lost, found, hostel, audit,courses] = await Promise.all([
+    const [arrivals, gates, lost, found, hostel, audit, courses] = await Promise.all([
       canSeeArrivals ? prisma.arrivalRequest.findMany({ where: !council ? { student_id: user.id } : role === 'transport' ? { delivery_method: 'transport' } : {}, include: { student: { select: profileSelect } }, orderBy: { created_at: 'desc' }, take: 300 }) : Promise.resolve([]),
       canSeeGates ? prisma.gateSchedule.findMany({ where: council ? {} : { active: true }, orderBy: [{ active: 'desc' }, { gate_date: 'asc' }], take: 100 }) : Promise.resolve([]),
       canSeeLost ? prisma.lostReport.findMany({ where: council ? {} : { student_id: user.id }, include: { student: { select: profileSelect } }, orderBy: { created_at: 'desc' }, take: 300 }) : Promise.resolve([]),
@@ -189,17 +189,17 @@ export async function POST(req: Request) {
 
     if (action === 'arrival.create') {
       if (council) return jsonError('Only students can register incoming goods.', 403);
-const profile = await prisma.profile.findUnique({
-  where: { id: user.id },
-  select: { matric_no: true },
-});
+      const profile = await prisma.profile.findUnique({
+        where: { id: user.id },
+        select: { matric_no: true },
+      });
 
-if (!profile?.matric_no) {
-  return jsonError(
-    'Please complete your profile and add your matric number before submitting requests.',
-    403
-  );
-}
+      if (!profile?.matric_no) {
+        return jsonError(
+          'Please complete your profile and add your matric number before submitting requests.',
+          403
+        );
+      }
 
       const item = str(b.itemDescription, 500); const quantity = Number(b.quantity); const expected = new Date(b.expectedDate);
       if (!item || !Number.isInteger(quantity) || quantity < 1 || quantity > 100 || Number.isNaN(expected.getTime())) return jsonError('Enter an item description, valid quantity, and expected arrival date.');
@@ -259,17 +259,17 @@ if (!profile?.matric_no) {
     }
     if (action === 'found.claim') {
       if (council) return jsonError('Only students can request to claim found items.', 403);
-const profile = await prisma.profile.findUnique({
-  where: { id: user.id },
-  select: { matric_no: true },
-});
+      const profile = await prisma.profile.findUnique({
+        where: { id: user.id },
+        select: { matric_no: true },
+      });
 
-if (!profile?.matric_no) {
-  return jsonError(
-    'Please complete your profile and add your matric number before submitting requests.',
-    403
-  );
-}
+      if (!profile?.matric_no) {
+        return jsonError(
+          'Please complete your profile and add your matric number before submitting requests.',
+          403
+        );
+      }
 
       const foundId = str(b.foundId, 80); const lostId = str(b.lostId, 80);
       const [found, lost] = await Promise.all([prisma.foundItem.findUnique({ where: { id: foundId } }), prisma.lostReport.findFirst({ where: { id: lostId, student_id: user.id } })]);
@@ -290,23 +290,23 @@ if (!profile?.matric_no) {
     if (action === 'hostel.create') {
       if (council) return jsonError('Only students can submit Hostel Watch reports.', 403);
       const profile = await prisma.profile.findUnique({
-  where: { id: user.id },
-  select: { matric_no: true },
-});
+        where: { id: user.id },
+        select: { matric_no: true },
+      });
 
-if (!profile?.matric_no) {
-  return jsonError(
-    'Please complete your profile and add your matric number before submitting requests.',
-    403
-  );
-}
+      if (!profile?.matric_no) {
+        return jsonError(
+          'Please complete your profile and add your matric number before submitting requests.',
+          403
+        );
+      }
       const hall = str(b.hall, 120); const area = str(b.roomArea, 120); const issue = str(b.issueType, 100); const priority = str(b.priority, 20); const description = str(b.description, 2500);
       if (!hall || !area || !issue || description.length < 10 || !['High', 'Medium', 'Low'].includes(priority)) return jsonError('Complete all report fields and provide a detailed description.');
       const report = await prisma.hostelReport.create({ data: { student_id: user.id, hall, room_area: area, issue_type: issue, priority, description } });
       await log(`Submitted a Hostel Watch report: ${issue}.`, priority === 'High' ? 'warning' : 'info'); return NextResponse.json({ ok: true, record: report }, { status: 201 });
     }
     if (action === 'hostel.update') {
-      if (!roleIs(user, 'welfare', 'vcm')) return jsonError('Only Welfare or VCM can update Hostel Watch reports.', 403);
+      if (!roleIs(user, 'vcm')) return jsonError('Only VCM can update Hostel Watch reports.', 403);
       const id = str(b.id, 80); const status = str(b.status, 30);
       if (!['Open', 'In Progress', 'Resolved', 'Rejected'].includes(status)) return jsonError('Invalid report status.');
       const report = await prisma.hostelReport.update({ where: { id }, data: { status, assigned_to: str(b.assignedTo, 100) || null, resolution: str(b.resolution, 1500) || null } });
